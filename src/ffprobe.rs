@@ -68,3 +68,67 @@ pub fn ffprobe_is_installed() -> bool {
     .map(|s| s.success())
     .unwrap_or_else(|_| false)
 }
+
+/// A wrapper around [`std::process::Command`] with some convenient preset
+/// argument sets and customization for `ffprobe` specifically.
+///
+/// The `rustdoc` on each method includes relevant information from the FFprobe
+/// documentation: <https://ffmpeg.org/ffprobe.html>. Refer there for the
+/// exhaustive list of possible arguments.
+pub struct FfprobeCommand {
+  inner: Command,
+}
+
+impl FfprobeCommand {
+  //// Generic option aliases ////
+  //// https://ffmpeg.org/ffprobe.html#Generic-options
+
+  /// alias for `-hide_banner` argument.
+  ///
+  /// Suppress printing banner.
+  ///
+  /// All FFmpeg tools will normally show a copyright notice, build options and
+  /// library versions. This option can be used to suppress printing this
+  /// information.
+  pub fn hide_banner(&mut self) -> &mut Self {
+    self.arg("-hide_banner");
+    self
+  }
+
+  /// alias for `-print_format` argument.
+  ///
+  /// Set the output printing format.
+  ///
+  /// writer_name specifies the name of the writer, and writer_options specifies
+  /// the options to be passed to the writer.
+  pub fn print_format<S: AsRef<str>>(&mut self, format: S) -> &mut Self {
+    self.arg("-print_format");
+    self.arg(format.as_ref());
+    self
+  }
+
+  //// `std::process::Command` passthrough methods
+
+  ///
+  /// Adds an argument to pass to the program.
+  ///
+  /// Identical to `arg` in [`std::process::Command`].
+  pub fn arg<S: AsRef<OsStr>>(&mut self, arg: S) -> &mut Self {
+    self.inner.arg(arg.as_ref());
+    self
+  }
+
+  /// Adds multiple arguments to pass to the program.
+  ///
+  /// Identical to `args` in [`std::process::Command`].
+  pub fn args<I, S>(&mut self, args: I) -> &mut Self
+  where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+  {
+    for arg in args {
+      self.arg(arg.as_ref());
+    }
+    self
+  }
+}
