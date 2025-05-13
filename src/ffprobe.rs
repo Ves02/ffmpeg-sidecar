@@ -1,5 +1,7 @@
 //! Utilities related to the FFprobe binary.
 
+use std::collections::HashMap;
+use std::thread::spawn;
 use crate::command::BackgroundCommand;
 use anyhow::Context;
 use std::{env::current_exe, ffi::OsStr, path::PathBuf};
@@ -76,7 +78,7 @@ pub fn ffprobe_is_installed() -> bool {
 /// documentation: <https://ffmpeg.org/ffprobe.html>. Refer there for the
 /// exhaustive list of possible arguments.
 pub struct FfprobeCommand {
-  inner: Command,
+  inner: Command
 }
 
 impl FfprobeCommand {
@@ -104,6 +106,27 @@ impl FfprobeCommand {
   pub fn print_format<S: AsRef<str>>(&mut self, format: S) -> &mut Self {
     self.arg("-print_format");
     self.arg(format.as_ref());
+    self
+  }
+
+  ///Set list of entries to show. 
+  /// 
+  /// Entries are specified according to the following syntax. section_entries 
+  /// contains a list of section entries separated by :. Each section entry is 
+  /// composed by a section name (or unique name), optionally followed by a list 
+  /// of entries local to that section, separated by ,.
+  /// 
+  /// If section name is specified but is followed by no =, all entries are printed 
+  /// to output, together with all the contained sections. Otherwise only the 
+  /// entries specified in the local section entries list are printed. In particular, 
+  /// if = is specified but the list of local entries is empty, then no entries will 
+  /// be shown for that section.
+  /// 
+  /// Note that the order of specification of the local section entries is not honored 
+  /// in the output, and the usual display order will be retained.
+  pub fn show_entries<S: AsRef<str>>(&mut self, entries: S) -> &mut Self {
+    self.arg("-show_entries");
+    self.arg(entries.as_ref());
     self
   }
 
